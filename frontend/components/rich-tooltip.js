@@ -192,7 +192,7 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
     if (!this._targetElement) {
       return;
     }
-    this._targetElement.addEventListener('mouseenter', this._boundShow);
+    this._targetElement.addEventListener('mouseover', this._boundShow);
   }
 
   _debounce(func, wait) {
@@ -206,7 +206,7 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
   }
                         
   _detachFromTarget() {
-    this._targetElement.removeEventListener('mouseenter', this._boundShow);
+    this._targetElement.removeEventListener('mouseover', this._boundShow);
   }
 
   /** @private */
