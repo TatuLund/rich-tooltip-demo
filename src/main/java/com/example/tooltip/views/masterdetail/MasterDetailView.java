@@ -8,10 +8,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.dependency.JsModule;
-import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -25,13 +22,10 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.renderer.LitRenderer;
-import com.vaadin.flow.data.renderer.TemplateRenderer;
-import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import java.util.Optional;
 import java.util.UUID;
@@ -84,14 +78,15 @@ public class MasterDetailView extends Div implements BeforeEnterObserver {
 
         LitRenderer<SamplePerson> firstNameRendererLit = LitRenderer
                 .<SamplePerson> of(
-                        "<div id='${item.nameFor}'>${item.firstName}</div><rich-tooltip for='${item.nameFor}' text='${item.nameTooltip}'></rich-tooltip>")
+                        "<div style='width: 100%; height: 100%;' id='${item.nameFor}'>${item.firstName}</div><rich-tooltip for='${item.nameFor}' text='${item.nameTooltip}'>")
                 .withProperty("firstName", SamplePerson::getFirstName)
                 .withProperty("nameFor", item -> "name" + id++)
                 .withProperty("nameTooltip",
                         item -> "<span style='color: coral'><b>Name</b>: "
                                 + item.getFirstName() + " " + item.getLastName()
                                 + "</span><br><b style='color: white'>Occupation</b>: <i style='color: white'>"
-                                + item.getOccupation() + "</i>");
+                                + item.getOccupation() + "</i>")
+                .withFunction("onClick", item -> Notification.show(item.getFirstName()+ " clicked!"));
 
         grid.addColumn(firstNameRendererLit).setHeader("First Name")
                 .setAutoWidth(true);

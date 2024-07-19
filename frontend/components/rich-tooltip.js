@@ -17,19 +17,19 @@
 import { html, PolymerElement } from '@polymer/polymer/polymer-element';
 import { ThemableMixin } from '@vaadin/vaadin-themable-mixin';
 import { ElementMixin } from '@vaadin/component-base/src/element-mixin';
-import { OverlayElement } from '@vaadin/vaadin-overlay/src/vaadin-overlay.js';
+import { Overlay } from '@vaadin/vaadin-overlay/src/vaadin-overlay.js';
 import '@vaadin/overlay';
 import '@polymer/iron-media-query';
 
-class OverlayTooltipOverlayElement extends OverlayElement {
+class RichTooltipOverlayElement extends Overlay {
   static get is() {
     return 'rich-tooltip-overlay';
   }
 }
 
-customElements.define(OverlayTooltipOverlayElement.is, OverlayTooltipOverlayElement);
+customElements.define(RichTooltipOverlayElement.is, RichTooltipOverlayElement);
 
-class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
+class RichTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
   static get template() {
     return html`
       <style>
@@ -117,12 +117,6 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
         observer: '__textChanged',
       },
 
-      closeOnClick: {
-        type: Boolean,
-        value: false,
-        reflectToAttribute: true
-      },
-
       _targetElement: {
         type: Object
       },
@@ -148,8 +142,8 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
 
   constructor() {
     super();
-    this._boundShow = this._debounce(this.show.bind(this), 100);
-    this._boundHide = this._debounce(this.hide.bind(this), 100);
+    this._boundShow = this._debounce(this.show.bind(this), 200);
+    this._boundHide = this._debounce(this.hide.bind(this), 200);
   }
 
   ready() {
@@ -157,9 +151,6 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
 	this.$.tooltipOverlay.innerHTML = this.text;
     this.$.tooltipOverlay.addEventListener('vaadin-overlay-open', () => this._tooltipOpenChanged(true));
     this.$.tooltipOverlay.addEventListener('vaadin-overlay-close', () => this._tooltipOpenChanged(false));
-    if (this.closeOnClick) {
-      this.$.tooltipOverlay.addEventListener('click', this._boundHide);
-    }
   }
 
   connectedCallback() {
@@ -173,9 +164,6 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._detachFromTarget();
-    if (this.closeOnClick) {
-      this.$.tooltipOverlay.removeEventListener('click', this._boundHide);
-    }
   }
 
   show() {
@@ -185,6 +173,7 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
   }
 
   hide() {
+	if (!this.opened) return;
     this.opened = false;
   }
 
@@ -192,7 +181,8 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
     if (!this._targetElement) {
       return;
     }
-    this._targetElement.addEventListener('mouseover', this._boundShow);
+    this._targetElement.addEventListener('mouseenter', this._boundShow);
+    this._targetElement.addEventListener('mouseout', this._boundHide);
   }
 
   _debounce(func, wait) {
@@ -206,7 +196,8 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
   }
                         
   _detachFromTarget() {
-    this._targetElement.removeEventListener('mouseover', this._boundShow);
+    this._targetElement.removeEventListener('mouseenter', this._boundShow);
+    this._targetElement.removeEventListener('mouseout', this._boundHide);
   }
 
   /** @private */
@@ -219,8 +210,8 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
   _setPosition() {
     const targetBoundingRect = this._targetElement.getBoundingClientRect();
     const overlayRect = this.$.tooltipOverlay.getBoundingClientRect();
-    const positionLeft = targetBoundingRect.left;
-    const positionTop = targetBoundingRect.top + targetBoundingRect.height + window.pageYOffset;
+    const positionLeft = targetBoundingRect.left + 10;
+    const positionTop = targetBoundingRect.top + targetBoundingRect.height + window.pageYOffset - 2;
 
     if (positionLeft + overlayRect.width > window.innerWidth) {
       this.$.tooltipOverlay.style.right = '0px';
@@ -239,13 +230,15 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
 
   _tooltipOpenChanged(isOpened) {
     if (isOpened) {
-      this._targetElement.addEventListener('mouseleave', this._boundHide);
+      this._targetElement.addEventListener('mouseout', this._boundHide);
       this.$.tooltipOverlay.addEventListener('mouseout', this._boundHide);
       this.$.tooltipOverlay.addEventListener('click', this._boundHide);
+      this.$.tooltipOverlay.addEventListener('mouseenter', this._boundShow);
     } else {
-      this._targetElement.removeEventListener('mouseleave', this._boundHide);
+      this._targetElement.removeEventListener('mouseout', this._boundHide);
       this.$.tooltipOverlay.removeEventListener('mouseout', this._boundHide);
       this.$.tooltipOverlay.removeEventListener('click', this._boundHide);
+      this.$.tooltipOverlay.removeEventListener('mouseenter', this._boundShow);
     }
     this.dispatchEvent(
       new CustomEvent('tooltip-open-changed', {
@@ -257,9 +250,9 @@ class OverlayTooltip extends ElementMixin(ThemableMixin(PolymerElement)) {
   }
 }
 
-customElements.define(OverlayTooltip.is, OverlayTooltip);
+customElements.define(RichTooltip.is, RichTooltip);
 
 /**
  * @namespace Vaadin
  */
-window.Vaadin.OverlayTooltip = OverlayTooltip;
+window.Vaadin.RichTooltip = RichTooltip;
